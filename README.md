@@ -1,7 +1,5 @@
 # HostIt
 
-## Proof of Concept
-
 Reverse Proxy that supports running executables with dynamic port assignment.
 In addition, SSL with SNI is supported via Kestrel.  Also, has been tested with
 Docker.
