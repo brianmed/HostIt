@@ -1,21 +1,23 @@
 # HostIt
 
-## Proof of Concept - Not Fit for Anyting
+## Proof of Concept
 
-Reverse Proxy that supports running executables with dynamic port assignment.  In addition, SSL with SNI is supported via Kestrel.
+Reverse Proxy that supports running executables with dynamic port assignment.
+In addition, SSL with SNI is supported via Kestrel.  Also, has been tested with
+Docker.
 
-Supplied executables are started via ProcessStartInfo and Killed during shutdown.
+Supplied executables are started via ProcessStartInfo and Killed during
+shutdown.
 
-Below is an example appsettings.json that will run two executables and reverse proxy them with dynamic port assignment.
+The app is configured via a hostit.json file.  This is an IConfiguration
+compatible json file with a single key dictionary "ProcessMetaData" that is an
+array.
+
+Below is an example hostit.json that will run one executable and one docker
+container and reverse proxy them with dynamic port assignment.
 
 ```json
 {
-    "Logging": {
-        "LogLevel": {
-            "Default": "Information",
-            "Microsoft.AspNetCore": "Warning"
-        }
-    },
     "ProcessMetaData": [
         {
             "ExecutablePath": "/srv/App1",
@@ -23,7 +25,7 @@ Below is an example appsettings.json that will run two executables and reverse p
             "StdoutLogfile": "/var/log/app1/stdout.log",
             "PortMode": "Dynamic",
             "ArgumentList": [
-                "--urls=http://127.0.0.1:{port}"                
+                "--urls=http://127.0.0.1:{{port}}"                
             ],
             "WorkingDirectory": "/srv/App1",
             "ReverseProxy": {
@@ -42,7 +44,7 @@ Below is an example appsettings.json that will run two executables and reverse p
                         "ClusterId": "app1",
                         "Destinations": {
                             "app1/destination0": {
-                                "Address": "http://127.0.0.1:{port}"
+                                "Address": "http://127.0.0.1:{{port}}"
                             }
                         }
                     }
@@ -50,39 +52,46 @@ Below is an example appsettings.json that will run two executables and reverse p
             }
         },
         {
-            "ExecutablePath": "/srv/App2",
-            "StderrLogfile": "/var/log/app2/stderr.log",
-            "StdoutLogfile": "/var/log/app2/stdout.log",
+            "ExecutablePath": "/usr/bin/docker",
+            "StderrLogfile": "/srv/docker/ghost/stderr.log",
+            "StdoutLogfile": "/srv/docker/ghost/stdout.log",
             "PortMode": "Dynamic",
             "ArgumentList": [
-                "--urls=http://127.0.0.1:{port}"
+                "run",
+                "--rm",
+                "-p",
+                "{{port}}:2368",
+                "-v", 
+                "/opt/ghost/content:/var/lib/ghost/content",
+                "-e",
+                "url=https://blog.app2",
+                "ghost"
             ],
-            "WorkingDirectory": "/srv/app2",
+            "WorkingDirectory": "/srv/docker/ghost",
             "ReverseProxy": {
                 "Routes": [
                     {
-                        "RouteId" : "app2",
-                        "ClusterId": "app2",
+                        "RouteId" : "blog.app2",
+                        "ClusterId": "blog.app2",
                         "Match": {
                             "Path": "{**catch-all}",
-                            "Hosts": [ "app2.com" ]
+                            "Hosts": [ "blog.app2" ]
                         }
                     }
                 ],
                 "Clusters": [
                     {
-                        "ClusterId": "app2",
+                        "ClusterId": "blog.app2",
                         "Destinations": {
-                            "app2/destination0": {
-                                "Address": "http://127.0.0.1:{port}"
+                            "blog.app2/destination0": {
+                                "Address": "http://127.0.0.1:{{port}}"
                             }
                         }
                     }
                 ]
             }
         }
-    ],
-    "AllowedHosts": "*"
+    ]
 }
 ```
 
