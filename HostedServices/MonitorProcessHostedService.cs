@@ -134,7 +134,7 @@ public class MonitorProcessHostedService : BackgroundService
         {
             string _argv = processMetaData.PortMode switch
             {
-                PortModes.Dynamic => argv.Replace("{port}", processMetaData.Port.ToString()),
+                PortModes.Dynamic => argv.Replace("{{port}}", processMetaData.Port.ToString()),
                 PortModes.Static => argv,
                 _ => throw new Exception("Unknown Input Found")
             };
@@ -142,7 +142,7 @@ public class MonitorProcessHostedService : BackgroundService
             startInfo.ArgumentList.Add(_argv);
         }
 
-        Logger.LogInformation($"Starting Process: {processMetaData.ExecutablePath}");
+        Logger.LogInformation($"Starting Process: {processMetaData.ExecutablePath} {String.Join(" ", startInfo.ArgumentList)}");
         processMetaData.Process = Process.Start(startInfo);
 
         processMetaData.Process.StandardInput.AutoFlush = true;
