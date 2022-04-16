@@ -6,6 +6,8 @@ Reverse Proxy that supports running executables with dynamic port assignment.
 
 Supplied executables are started via ProcessStartInfo and Killed during shutdown.
 
+Below is an example appsettings.json that will run two executables and reverse proxy them with dynamic port assignment.
+
 ```json
 {
     "Logging": {
