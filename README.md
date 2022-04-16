@@ -2,7 +2,7 @@
 
 ## Proof of Concept - Not Fit for Anyting
 
-Reverse Proxy that supports running executables with dynamic port assignment.
+Reverse Proxy that supports running executables with dynamic port assignment.  In addition, SSL with SNI is supported via Kestrel.
 
 Supplied executables are started via ProcessStartInfo and Killed during shutdown.
 
@@ -83,5 +83,37 @@ Below is an example appsettings.json that will run two executables and reverse p
         }
     ],
     "AllowedHosts": "*"
+}
+```
+
+Kestrel appsettings.json section that supports Sni.
+
+```json
+{
+    "Kestrel": {
+        "Endpoints": {
+            "EndpointName": {
+                "Url": "https://*",
+                "Sni": {
+                    "app1": {
+                        "Protocols": "Http1AndHttp2",
+                        "SslProtocols": [ "Tls11", "Tls12", "Tls13"],
+                        "Certificate": {
+                            "Path": "/etc/letsencrypt/live/app1/cert.pem",
+                            "KeyPath": "/etc/letsencrypt/live/app1/privkey.pem"
+                        }
+                    },
+                    "app2": {
+                        "Protocols": "Http1AndHttp2",
+                        "SslProtocols": [ "Tls11", "Tls12", "Tls13"],
+                        "Certificate": {
+                            "Path": "/etc/letsencrypt/live/app2/cert.pem",
+                            "KeyPath": "/etc/letsencrypt/live/app2/privkey.pem"
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 ```
