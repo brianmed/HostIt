@@ -112,12 +112,12 @@ Kestrel appsettings.json section that supports Sni.
                             "KeyPath": "/etc/letsencrypt/live/app1/privkey.pem"
                         }
                     },
-                    "app2": {
+                    "blog.app2": {
                         "Protocols": "Http1AndHttp2",
                         "SslProtocols": [ "Tls11", "Tls12", "Tls13"],
                         "Certificate": {
-                            "Path": "/etc/letsencrypt/live/app2/cert.pem",
-                            "KeyPath": "/etc/letsencrypt/live/app2/privkey.pem"
+                            "Path": "/etc/letsencrypt/live/blog.app2/cert.pem",
+                            "KeyPath": "/etc/letsencrypt/live/blog.app2/privkey.pem"
                         }
                     }
                 }
