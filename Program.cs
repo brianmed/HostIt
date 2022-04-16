@@ -1,8 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
-
 using Yarp.ReverseProxy.Configuration;
-using Yarp.ReverseProxy.Forwarder;
-using Yarp.ReverseProxy.Model;
 
 using HostIt;
 using HostIt.HostedServices;

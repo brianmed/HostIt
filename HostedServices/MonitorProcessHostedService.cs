@@ -9,12 +9,19 @@ public class MonitorProcessHostedService : BackgroundService
 
     private static ConcurrentBag<int> AvailablePorts { get; } = new();
 
+    private ILogger<MonitorProcessHostedService> Logger { get; set; }
+
     static MonitorProcessHostedService()
     {
         foreach (int port in Enumerable.Range(9000, 30))
         {
             AvailablePorts.Add(port);
         }
+    }
+
+    public MonitorProcessHostedService(ILogger<MonitorProcessHostedService> logger)
+    {
+        Logger = logger;
     }
 
     public static void Add(List<ProcessMetaData> processMetaDatas)
@@ -48,14 +55,29 @@ public class MonitorProcessHostedService : BackgroundService
             {
                 try
                 {
+                    bool somethingHappened = false;
+
                     foreach (ProcessMetaData processMetaData in Processes)
                     {
-                        Console.WriteLine($"{processMetaData.ExecutablePath} {(processMetaData.Process.HasExited ? "Exited" : "Running")}");
+                        if (processMetaData.Process is null) {
+                            somethingHappened = true;
+
+                            Start(processMetaData);
+                        } else if (processMetaData.Process.HasExited) {
+                            somethingHappened = true;
+
+                            // Will restart the next iteration
+                            Reap(processMetaData);
+                        }
+                    }
+
+                    if (somethingHappened is false) {
+                        Logger.LogInformation("All Processes Running");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Issue Monitoring Process {ex}");
+                    Logger.LogError(ex, "Issue Monitoring Process");
                 }
             }
 
@@ -68,7 +90,7 @@ public class MonitorProcessHostedService : BackgroundService
         }
         catch (Exception ex) when(ex is not OperationCanceledException)
         {
-            Console.WriteLine($"Issue Running PeriodicTimer {ex}");
+            Logger.LogError(ex, "Issue Running PeriodicTimer");
         }
     }
 
@@ -80,6 +102,21 @@ public class MonitorProcessHostedService : BackgroundService
         }
     }
 
+    private void Reap(ProcessMetaData pmd)
+    {
+        pmd.Process.CancelErrorRead();
+        pmd.Process.CancelOutputRead();
+
+        pmd.Process.ErrorDataReceived -= OnReceivedProcessError;
+        pmd.Process.OutputDataReceived -= OnReceivedProcessOutput;
+
+        Logger.LogWarning($"Reaping: {pmd.ExecutablePath}: {pmd.Process.ExitCode}: {pmd.Process.ExitTime}");
+
+        pmd.Process.Dispose();
+
+        pmd.Process = null;
+    }
+
     private void Start(ProcessMetaData processMetaData)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo(processMetaData.ExecutablePath)
@@ -89,7 +126,8 @@ public class MonitorProcessHostedService : BackgroundService
             RedirectStandardInput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WorkingDirectory = processMetaData.WorkingDirectory
+            WorkingDirectory = processMetaData.WorkingDirectory,
+            UserName = processMetaData.Username
         };
 
         foreach (string argv in processMetaData.ArgumentList)
@@ -104,12 +142,14 @@ public class MonitorProcessHostedService : BackgroundService
             startInfo.ArgumentList.Add(_argv);
         }
 
-        Console.WriteLine($"Starting: {processMetaData.ExecutablePath}");
+        Logger.LogInformation($"Starting Process: {processMetaData.ExecutablePath}");
         processMetaData.Process = Process.Start(startInfo);
 
         processMetaData.Process.StandardInput.AutoFlush = true;
+
         processMetaData.Process.ErrorDataReceived += OnReceivedProcessError;
         processMetaData.Process.OutputDataReceived += OnReceivedProcessOutput;
+
         processMetaData.Process.BeginErrorReadLine();
         processMetaData.Process.BeginOutputReadLine();
     }
@@ -164,4 +204,6 @@ public class ProcessMetaData
     public Process Process { get; set; }
 
     public string WorkingDirectory { get; set; }
+
+    public string Username { get; set; }
 }
