@@ -26,6 +26,14 @@ Below are example hostit.json and static.app1.com.json files.  Of note is that
 three executables will be ran.  They are "app1", "docker", and "hostit".  All
 three will be ran and restared on failure.
 
+This example shows that "hostit" can be executed with different .json files for
+different roles.  The hostit.json file is when "hostit" should run and monitor
+executables while being a reverse proxy.  The static.app1.com.json file 
+is for serving static files only via "hostit".
+
+Also, please see the PortMetaData section for declaring Port Names and their use
+in the ArgumentList of ProcessMetaData and Address of Clusters.
+
 ```json
 // hostit.json
 {
