@@ -34,6 +34,8 @@ is for serving static files only via "hostit".
 Also, please see the PortMetaData section for declaring Port Names and their use
 in the ArgumentList of ProcessMetaData and Address of Clusters.
 
+Simply running ./hostit should work with this example.
+
 ```json
 // hostit.json
 {
