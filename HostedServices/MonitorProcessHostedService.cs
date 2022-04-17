@@ -80,17 +80,21 @@ public class MonitorProcessHostedService : BackgroundService
                     Logger.LogError(ex, "Issue Monitoring Process");
                 }
             }
-
-            foreach (ProcessMetaData processMetaData in Processes)
-            {
-                if (processMetaData?.Process.HasExited is false) {
-                    processMetaData.Process.Kill(true);
-                }
-            }
         }
         catch (Exception ex) when(ex is not OperationCanceledException)
         {
             Logger.LogError(ex, "Issue Running PeriodicTimer");
+        }
+        finally
+        {
+            foreach (ProcessMetaData processMetaData in Processes)
+            {
+                if (processMetaData?.Process.HasExited is false) {
+                    Logger.LogInformation($"Killing {processMetaData.ExecutablePath}");
+
+                    processMetaData.Process.Kill(true);
+                }
+            }
         }
     }
 

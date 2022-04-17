@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json;
 
+using Microsoft.Extensions.FileProviders;
+
 using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
 using JsonCons.JsonPath;
@@ -10,7 +12,7 @@ using HostIt.HostedServices;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-(List<RouteConfig> routeConfigs, List<ClusterConfig> clusterConfigs) = InitializeProcessMetaDataJson("hostit.json");
+(List<RouteConfig> routeConfigs, List<ClusterConfig> clusterConfigs) = InitializeProcessMetaDataJson(args.FirstOrDefault("hostit.json"));
 
 builder.Services
     .AddReverseProxy()
@@ -23,9 +25,25 @@ builder.Services
     })
     .LoadFromMemory(routeConfigs, clusterConfigs);
 
-builder.Services.AddHostedService<MonitorProcessHostedService>();
+bool hasDirectoryBrowser = 
+    builder.Configuration
+        .GetSection("StaticFiles")
+        .GetChildren()
+        .Select(c => c
+            .GetValue<bool>("DirectoryBrowser"))
+        .Any();
+    
+if (hasDirectoryBrowser) {
+    builder.Services.AddDirectoryBrowser();
+}
+
+if (routeConfigs.Any() && clusterConfigs.Any()) {
+    builder.Services.AddHostedService<MonitorProcessHostedService>();
+}
 
 WebApplication app = builder.Build();
+
+InitializeStaticFiles(app, args.FirstOrDefault("hostit.json"));
 
 app.UseRouting();
 
@@ -36,11 +54,52 @@ app.UseEndpoints(endpoints =>
 
 await app.RunAsync();
 
+void InitializeStaticFiles(WebApplication app, string path)
+{
+    IConfiguration hostitConfig = new ConfigurationBuilder()
+        .AddJsonFile(path)
+        .Build();
+
+    foreach (IConfigurationSection joy in hostitConfig.GetSection("StaticFiles").GetChildren())
+    {
+        string[] root = joy.GetSection("RootPath")
+            .GetChildren()
+            .Select(v => v.Get<string>())
+            .ToArray();
+
+        PhysicalFileProvider fileProvider = null;
+
+        if (Path.IsPathRooted(root[0])) {
+            fileProvider = new(Path.Combine(root));
+        } else {
+            fileProvider = new(Path.Combine(root.Prepend(builder.Environment.WebRootPath).ToArray()));
+        }
+
+        string requestPath = joy.GetValue<string>("RequestPath");
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = fileProvider,
+            RequestPath = requestPath
+        });
+
+        app.UseDirectoryBrowser(new DirectoryBrowserOptions
+        {
+            FileProvider = fileProvider,
+            RequestPath = requestPath
+        });
+    }
+}
+
 (List<RouteConfig>, List<ClusterConfig>) InitializeProcessMetaDataJson(string path)
 {
     IConfiguration hostitConfig = new ConfigurationBuilder()
         .AddJsonFile(path)
         .Build();
+
+    if (hostitConfig.GetSection("ProcessMetaData").GetChildren().Count() == 0) {
+        return (Enumerable.Empty<RouteConfig>().ToList(), Enumerable.Empty<ClusterConfig>().ToList());
+    }
 
     List<ProcessMetaData> processMetaDatas = hostitConfig
         .GetSection("ProcessMetaData")
