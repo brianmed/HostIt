@@ -17,8 +17,12 @@ executables should stay in the foreground.
 ## Configuration
 
 The app is configured via a hostit.json file.  This is an IConfiguration
-compatible json file with a single key dictionary "ProcessMetaData" that is an
-array.
+compatible json file with multiple sections.  They are "PortMetaData", 
+"ProcessMetaData", "ReverseProxy", and "StaticFiles".
+
+See examples below.
+
+They may turn in subsections under "HostIt" or similar in the future.
 
 ## Examples
 
@@ -39,7 +43,7 @@ Simply running ./hostit should work with this example.
 ```json
 // hostit.json
 {
-    "PortMetadata": {
+    "PortMetaData": {
         "RangeStart": 8080,
         "Names": [
             "app1.com",
