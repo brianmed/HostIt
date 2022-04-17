@@ -2,10 +2,13 @@
 
 Reverse Proxy that supports running executables with dynamic port assignment.
 In addition, SSL with SNI is supported via Kestrel.  Also, has been tested with
-Docker.
+Docker.  
 
 Supplied executables are started via ProcessStartInfo and Killed during
 shutdown.
+
+In addition, static files are supported on a per directory basis with an
+optional directory browser.
 
 The app is configured via a hostit.json file.  This is an IConfiguration
 compatible json file with a single key dictionary "ProcessMetaData" that is an
@@ -122,5 +125,19 @@ Kestrel appsettings.json section that supports Sni.
             }
         }
     }
+}
+```
+
+A hostit.json file with static files only.
+
+```json
+{
+    "StaticFiles": [
+        {
+            "RequestPath": "/images",
+            "DirectoryBrowser": true,
+            "RootPath": [ "/", "Volumes", "Storage", "Images" ]
+        }
+    ]
 }
 ```
