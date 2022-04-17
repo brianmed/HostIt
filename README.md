@@ -27,7 +27,7 @@ three executables will be ran.  They are "app1", "docker", and "hostit".  All
 three will be ran and restared on failure.
 
 ```json
-hostit.json
+// hostit.json
 {
     "PortMetadata": {
         "RangeStart": 8080,
@@ -133,7 +133,7 @@ hostit.json
     }
 }
 
-static.app1.com.json
+// static.app1.com.json
 {
     "StaticFiles": {
         "EnableDefaultFiles": true,
