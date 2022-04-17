@@ -7,17 +7,7 @@ public class MonitorProcessHostedService : BackgroundService
 {
     private static ConcurrentBag<ProcessMetaData> Processes { get; } = new();
 
-    private static ConcurrentBag<int> AvailablePorts { get; } = new();
-
     private ILogger<MonitorProcessHostedService> Logger { get; set; }
-
-    static MonitorProcessHostedService()
-    {
-        foreach (int port in Enumerable.Range(9000, 30))
-        {
-            AvailablePorts.Add(port);
-        }
-    }
 
     public MonitorProcessHostedService(ILogger<MonitorProcessHostedService> logger)
     {
@@ -28,18 +18,7 @@ public class MonitorProcessHostedService : BackgroundService
     {
         foreach (ProcessMetaData processMetaData in processMetaDatas)
         {
-            Add(processMetaData);
-        }
-    }
-
-    public static void Add(ProcessMetaData processMetaData)
-    {
-        if (AvailablePorts.TryTake(out int port)) {
-            processMetaData.Port = port;
-
             Processes.Add(processMetaData);
-        } else {
-            throw new ArgumentOutOfRangeException("No available ports");
         }
     }
 
@@ -71,7 +50,7 @@ public class MonitorProcessHostedService : BackgroundService
                         }
                     }
 
-                    if (somethingHappened is false) {
+                    if (somethingHappened is false && (DateTime.Now.Minute % 5) == 0) {
                         Logger.LogInformation("All Processes Running");
                     }
                 }
@@ -136,14 +115,7 @@ public class MonitorProcessHostedService : BackgroundService
 
         foreach (string argv in processMetaData.ArgumentList)
         {
-            string _argv = processMetaData.PortMode switch
-            {
-                PortModes.Dynamic => argv.Replace("{{port}}", processMetaData.Port.ToString()),
-                PortModes.Static => argv,
-                _ => throw new Exception("Unknown Input Found")
-            };
-
-            startInfo.ArgumentList.Add(_argv);
+            startInfo.ArgumentList.Add(argv);
         }
 
         Logger.LogInformation($"Starting Process: {processMetaData.ExecutablePath} {String.Join(" ", startInfo.ArgumentList)}");
@@ -183,31 +155,4 @@ public class MonitorProcessHostedService : BackgroundService
                 new[] { e.Data.Replace("\r", "").Replace("\n", "") });
         }
     }
-}
-
-public enum PortModes
-{
-    Dynamic,
-    Static
-}
-
-public class ProcessMetaData
-{
-    public PortModes PortMode { get; init; }
-
-    public int Port { get; set; }
-
-    public string ExecutablePath { get; init; }
-
-    public List<string> ArgumentList { get; } = new();
-
-    public string StderrLogfile { get; init; }
-
-    public string StdoutLogfile { get; init; }
-
-    public Process Process { get; set; }
-
-    public string WorkingDirectory { get; set; }
-
-    public string Username { get; set; }
 }
