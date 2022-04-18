@@ -42,8 +42,6 @@ public class Options
 public enum CommandNames
 {
     Json,
-    Process,
-    Reverse,
     Static
 }
 
