@@ -234,7 +234,7 @@ public class Hub
         string rootPath = root.Any() switch
         {
             true => Path.Combine(root),
-            false => null
+            false => String.Empty
         };
 
         string requestPath = joy.GetValue<string>("RequestPath");

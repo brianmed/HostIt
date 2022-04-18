@@ -68,10 +68,10 @@ public class MonitorProcessHostedService : BackgroundService
         {
             foreach (ProcessMetaData processMetaData in Processes)
             {
-                if (processMetaData?.Process.HasExited is false) {
+                if (processMetaData?.Process?.HasExited is false) {
                     Logger.LogInformation($"Killing {processMetaData.ExecutablePath}");
 
-                    processMetaData.Process.Kill(true);
+                    processMetaData?.Process?.Kill(true);
                 }
             }
         }
