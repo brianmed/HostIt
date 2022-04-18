@@ -36,8 +36,6 @@ if (hub.HasStaticFile && hub.StaticFileMetaData.EnableDirectoryBrowsing) {
 }
 
 if (hub.HasProcesses) {
-    MonitorProcessHostedService.Add(hub.ProcesseMetaDatas);
-
     builder.Services.AddHostedService<MonitorProcessHostedService>();
 }
 
