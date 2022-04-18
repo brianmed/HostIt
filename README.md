@@ -3,13 +3,11 @@
 ## Summary
 
 HostIt is a reverse proxy, executable watchdog, and static file server with
-dynamic port assignment between the reverse proxy executables.  Also, manual
-port assignment is possible.
+dynamic port assignment between the reverse proxy and executables.  Also,
+manual port assignment is possible.
 
 HostIt has been has been tested with Docker (running the blogging engine
-Ghost).  
-
-Also, SSL with SNI is supported via Kestrel.  
+Ghost) and SSL with SNI via Kestrel.  
 
 Supplied executables are ran at startup and killed during shutdown.  The 
 executables should stay in the foreground.
@@ -40,6 +38,15 @@ json file with multiple sections.  They are "PortMetaData", "ProcessMetaData",
 See examples below.
 
 They may turn in subsections under "HostIt" or similar in the future.
+
+## Ports
+
+The PortMetaData configuration section sets up two things.  One is the
+beginning range for dyanmic port assignments and the other is the list of names
+for each dynamically assigned port.
+
+HostIt will replace an instance of {{name}} in the ArgumentList of a Process
+and Cluster Address with the assigned port name.
 
 ## Examples
 
