@@ -16,11 +16,24 @@ executables should stay in the foreground.
 
 There are currently two supported commands "json" and "static".
 
-The "json" command has a single argument: a json file (explained below).
+The "json" command has a single argument: a json file.  Explained in the
+Configuration, Ports, and Json Examples sections.
 
 The "static" command will start a static file server with the specified
 options.  For example, directory browsing and implicity serving index.html is
 supported.
+
+Run hostit and configure with hostit.json.
+
+```bash
+$ ./hostit json hostit.json
+```
+
+Run hostit and serve a static site.  If found, index.html will be served.
+
+```bash
+$ ./hostit static --enableDefaultFiles --rootPath /opt/site/wwwroot -- --urls='http://*'
+```
 
 ## Command Line Arguments
 
@@ -48,7 +61,7 @@ for each dynamically assigned port.
 HostIt will replace an instance of {{name}} in the ArgumentList of a Process
 and Cluster Address with the assigned port name.
 
-## Examples
+## Json Examples
 
 Below are example hostit.json and static.app1.com.json files.  Of note is that
 three executables will be ran.  They are "app1", "docker", and "hostit".  All
