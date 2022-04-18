@@ -5,9 +5,12 @@ using Yarp.ReverseProxy.Transforms;
 using HostIt;
 using HostIt.HostedServices;
 
-Hub hub = new Hub(args);
+Hub hub = new Hub(args.TakeWhile(arg => arg.Equals("--") is false).ToArray());
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication
+    .CreateBuilder(
+        args.SkipWhile((arg, idx) => ((args.ElementAtOrDefault(idx - 1) ?? String.Empty).Equals("--") is false))
+            .ToArray());
 
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
