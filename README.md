@@ -80,7 +80,9 @@ Running "$ ./hostit json hostit.json" should work with this example.
             "StderrLogfile": "/srv/app1.com/stderrStatic.log",
             "StdoutLogfile": "/srv/app1.com/stdoutStatic.log",
             "ArgumentList": [
-                "static.app1.com.json",
+                "static",
+                "--enableDefaultFiles",
+                "--",
                 "--urls=http://127.0.0.1:{{static.app1.com}}"
             ],
             "WorkingDirectory": "/srv/app1.com",
@@ -157,15 +159,6 @@ Running "$ ./hostit json hostit.json" should work with this example.
                 }
             }
         ]
-    }
-}
-
-// static.app1.com.json
-{
-    "StaticFiles": {
-        "EnableDefaultFiles": true,
-        "RequestPath": "",
-        "RootPath": [ "/", "opt", "bmedley.org", "wwwroot" ]
     }
 }
 ```
