@@ -8,11 +8,7 @@ using HostIt.HostedServices;
 Hub hub = new Hub(args.TakeWhile(arg => arg.Equals("--") is false).ToArray());
 
 WebApplicationBuilder builder = WebApplication
-    .CreateBuilder(
-        args.SkipWhile((arg, idx) => ((args.ElementAtOrDefault(idx - 1) ?? String.Empty).Equals("--") is false))
-            .ToArray());
-
-builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(30));
+    .CreateBuilder(args.SkipWhile(arg => arg.Equals("--") is false).Skip(1).ToArray());
 
 if (hub.HasJsonFile) {
     builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
