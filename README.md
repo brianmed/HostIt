@@ -2,9 +2,9 @@
 
 ## Summary
 
-The main features of HostIt are being a reverse proxy, running and monitoring
-executables, and static file serving.  In addition, the port assignment between
-executables and the reverse proxy can be assigned at run time.
+HostIt is a reverse proxy, executable watchdog, and static file server with
+dynamic port assignment between the reverse proxy executables.  Also, manual
+port assignment is possible.
 
 HostIt has been has been tested with Docker (running the blogging engine
 Ghost).  
@@ -23,6 +23,13 @@ The "json" command has a single argument: a json file (explained below).
 The "static" command will start a static file server with the specified
 options.  For example, directory browsing and implicity serving index.html is
 supported.
+
+## Command Line Arguments
+
+The command line arguments are paritioned into two groups.  One is hostit
+arguments and the other is ASP.Net arguments.  They are separated by "--".  For
+example, "hostit static --enableDirectoryBrowsing -- '--urls=http://*:9000'" 
+will run hostit as a static file server listening on port 9000.
 
 ## Configuration
 
