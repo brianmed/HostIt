@@ -14,11 +14,21 @@ Also, SSL with SNI is supported via Kestrel.
 Supplied executables are ran at startup and killed during shutdown.  The 
 executables should stay in the foreground.
 
+## Commands
+
+There are currently two supported commands "json" and "static".
+
+The "json" command has a single argument: a json file (explained below).
+
+The "static" command will start a static file server with the specified
+options.  For example, directory browsing and implicity serving index.html is
+supported.
+
 ## Configuration
 
-The app is configured via a hostit.json file.  This is an IConfiguration
-compatible json file with multiple sections.  They are "PortMetaData", 
-"ProcessMetaData", "ReverseProxy", and "StaticFiles".
+The app is configured via a json file.  This is an IConfiguration compatible
+json file with multiple sections.  They are "PortMetaData", "ProcessMetaData",
+"ReverseProxy", and "StaticFiles".
 
 See examples below.
 
@@ -31,14 +41,17 @@ three executables will be ran.  They are "app1", "docker", and "hostit".  All
 three will be ran and restared on failure.
 
 This example shows that "hostit" can be executed with different .json files for
-different roles.  The hostit.json file is when "hostit" should run and monitor
-executables while being a reverse proxy.  The static.app1.com.json file 
-is for serving static files only via "hostit".
+different roles.
+
+The hostit.json file configures "hostit" so that executables are ran and
+monitoried  while also being a reverse proxy.
+
+The static.app1.com.json file is for serving static files only via "hostit".
 
 Also, please see the PortMetaData section for declaring Port Names and their use
 in the ArgumentList of ProcessMetaData and Address of Clusters.
 
-Simply running ./hostit should work with this example.
+Running "$ ./hostit json hostit.json" should work with this example.
 
 ```json
 // hostit.json
