@@ -5,6 +5,9 @@ using Yarp.ReverseProxy.Configuration;
 
 using JsonCons.JsonPath;
 
+using HostIt.AppCtx;
+using HostIt.HostedServices;
+
 namespace HostIt;
 
 public class Hub
@@ -17,7 +20,68 @@ public class Hub
 
     public List<ClusterConfig> ClusterConfigs { get; } = new();
 
-    public StaticFileMetaData StaticFileMetaData { get; private set; } = new();
+    public StaticFileMetaData StaticFileMetaData { get; private set; }
+
+    public bool HasJsonFile
+    {
+        get
+        {
+            return String.IsNullOrWhiteSpace(Options.JsonOptions?.Path ?? String.Empty) is false;
+        }
+    }
+
+    public bool HasProcesses
+    {
+        get
+        {
+            return ProcesseMetaDatas.Any();
+        }
+    }
+
+    public bool HasReverseProxy
+    {
+        get
+        {
+            return RouteConfigs.Any() || ClusterConfigs.Any();
+        }
+    }
+
+    public bool HasStaticFile
+    {
+        get
+        {
+            return StaticFileMetaData is not null;
+        }
+    }
+
+    public string JsonFilePath
+    {
+        get
+        {
+            return Options.JsonOptions.Path;
+        }
+    }
+
+    public Hub(string[] args)
+    {
+        ConfigCtx.ParseOptions(args);
+
+        if (HasJsonFile) {
+            this.InitializePortMetadata(Options.JsonOptions.Path);
+            this.InitializeProcessMetaData(Options.JsonOptions.Path);
+            this.InitializeRouteConfig(Options.JsonOptions.Path);
+            this.InitializeClusterConfig(Options.JsonOptions.Path);
+            this.InitializeStaticFiles(Options.JsonOptions.Path);
+        }
+
+        if (Options.CommandName == CommandNames.Static) {
+            this.InitializeStaticFiles(Options.StaticOptions);
+        }
+
+        if (HasProcesses) {
+            MonitorProcessHostedService.Add(ProcesseMetaDatas);
+        }
+    }
 
     public void InitializeClusterConfig(string path)
     {
@@ -137,6 +201,17 @@ public class Hub
             .ToList();
 
         RouteConfigs.AddRange(routeConfigs);
+    }
+
+    public void InitializeStaticFiles(StaticOptions staticOptions)
+    {
+        StaticFileMetaData = new()
+        {
+            EnableDirectoryBrowsing = staticOptions.EnableDirectoryBrowsing,
+            EnableDefaultFiles = staticOptions.EnableDefaultFiles,
+            RequestPath = staticOptions.RequestPath,
+            RootPath = staticOptions.RootPath
+        };
     }
 
     public void InitializeStaticFiles(string path)

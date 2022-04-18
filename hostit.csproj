@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+      <InformationalVersion>$([System.IO.File]::ReadAllText("WhenBuilt.txt"))</InformationalVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -9,6 +13,9 @@
 
   <ItemGroup>
     <PackageReference Include="JsonCons.JsonPath" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta3.22114.1" />
+    <PackageReference Include="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta3.22114.1" />
     <PackageReference Include="Yarp.ReverseProxy" Version="1.0.1" />
   </ItemGroup>
 

@@ -5,24 +5,20 @@ using Yarp.ReverseProxy.Transforms;
 using HostIt;
 using HostIt.HostedServices;
 
-string appConfigJsonFile = args.FirstOrDefault("hostit.json");
-
-Hub hub = new Hub();
-
-hub.InitializePortMetadata(appConfigJsonFile);
-hub.InitializeProcessMetaData(appConfigJsonFile);
-hub.InitializeRouteConfig(appConfigJsonFile);
-hub.InitializeClusterConfig(appConfigJsonFile);
-hub.InitializeStaticFiles(appConfigJsonFile);
+Hub hub = new Hub(args);
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
-{
-    config.AddJsonFile(appConfigJsonFile, optional: false);
-});
+builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
-if (hub.RouteConfigs.Any() || hub.ClusterConfigs.Any()) {
+if (hub.HasJsonFile) {
+    builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+    {
+        config.AddJsonFile(hub.JsonFilePath, optional: false);
+    });
+}
+
+if (hub.HasReverseProxy) {
     builder.Services
         .AddReverseProxy()
         // Without the original host header, ghost was redirecting to 127.0.0.1 for ssl
@@ -34,12 +30,12 @@ if (hub.RouteConfigs.Any() || hub.ClusterConfigs.Any()) {
         })
         .LoadFromMemory(hub.RouteConfigs, hub.ClusterConfigs);
 }
-    
-if (hub.StaticFileMetaData.EnableDirectoryBrowsing) {
+
+if (hub.HasStaticFile && hub.StaticFileMetaData.EnableDirectoryBrowsing) {
     builder.Services.AddDirectoryBrowser();
 }
 
-if (hub.ProcesseMetaDatas.Any()) {
+if (hub.HasProcesses) {
     MonitorProcessHostedService.Add(hub.ProcesseMetaDatas);
 
     builder.Services.AddHostedService<MonitorProcessHostedService>();
@@ -47,22 +43,25 @@ if (hub.ProcesseMetaDatas.Any()) {
 
 WebApplication app = builder.Build();
 
-if (hub.StaticFileMetaData.RootPath is string rootPath && rootPath is not null) {
+if (hub.HasStaticFile) {
+    string rootPath = hub.StaticFileMetaData.RootPath;
+
     PhysicalFileProvider fileProvider = Path.IsPathRooted(rootPath) switch
     {
         true => new PhysicalFileProvider(rootPath),
-        false => new PhysicalFileProvider(Path.Combine(builder.Environment.WebRootPath, rootPath))
+        false => new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), rootPath))
     };
 
     app.UseFileServer(new FileServerOptions
     {
         FileProvider = fileProvider,
         EnableDefaultFiles = hub.StaticFileMetaData.EnableDefaultFiles,
-        EnableDirectoryBrowsing = hub.StaticFileMetaData.EnableDirectoryBrowsing
+        EnableDirectoryBrowsing = hub.StaticFileMetaData.EnableDirectoryBrowsing,
+        RequestPath = hub.StaticFileMetaData.RequestPath
     });
 }
 
-if (hub.RouteConfigs.Any() || hub.ClusterConfigs.Any()) {
+if (hub.HasReverseProxy) {
     app.UseRouting();
 
     app.UseEndpoints(endpoints =>
